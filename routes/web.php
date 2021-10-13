@@ -1,8 +1,8 @@
 <?php
-
+use Illuminate\Http\Request;
 use App\Http\Controllers\TrackCodeController;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\CoreController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -20,8 +20,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::delete('/deleteTerm/{id}', [TrackCodeController::class, 'deleteTerm'])->name('deleteTerm');
 });
 
-
-
+Route::post('wp-transport-rest',[CoreController::class,'proccessor']);
 Auth::routes();
 
 //Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
