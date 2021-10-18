@@ -17,6 +17,9 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/', [TrackCodeController::class, 'index'])->name('trackCode');
     Route::get('/terms', [TrackCodeController::class, 'terms'])->name('terms');
     Route::get('/getTerms', [TrackCodeController::class, 'getTerms'])->name('getTerms');
+    Route::get('/getTerms', [TrackCodeController::class, 'getTerms'])->name('getTerms');
+    Route::post('/setTerm', [TrackCodeController::class, 'setTerm'])->name('setTerm');
+    Route::post('/updateTerm/{id}', [TrackCodeController::class, 'updateTerm'])->name('updateTerm');
     Route::delete('/deleteTerm/{id}', [TrackCodeController::class, 'deleteTerm'])->name('deleteTerm');
 });
 

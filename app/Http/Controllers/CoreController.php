@@ -58,23 +58,25 @@ class CoreController extends Controller
     {
         $token = 'sVR7nTA3O8S01XciOrjB5Y3vplzxLtBok';
         $action = $request->input('action');
-        $trackcodes = $request->input('track_code');
         if ($request->input('token') != $token){
             $this->response(400, "Invalid Token", NULL);
             return;
         }
         switch ($action) {
             case 'get_details':
+                $trackcodes = $request->input('track_code');
                 $this->get_details($trackcodes);
                 break;
             case 'get_details_min':
+                $trackcodes = $request->input('track_code');
                 $this->get_details_min($trackcodes);
                 break;
             case 'get_details_min_auto_clean':
+                $trackcodes = $request->input('track_code');
                 $this->get_details_min_auto_clean($trackcodes);
                 break;
             case 'add_details':
-                $this->add_details();
+                $this->add_details($request);
                 break;
             case 'Duplicate_Clean':
                 $this->Duplicate_Clean();
@@ -112,8 +114,9 @@ class CoreController extends Controller
                 $term = array_values(array_filter($terms, function ($term) use ($detail) {
                     return ($term->term_id == $detail['status']);
                 }));
-
-                $detail['status'] = $term[0]->name;
+                if(isset($term[0]->name) && $term[0]->name != ''){
+                    $detail['status'] = $term[0]->name;
+                }
 
                 return $detail;
             }, $details));
@@ -238,9 +241,77 @@ class CoreController extends Controller
         $this->responseBre(200, "Successful", $postsWithTerm);
     }
 
-    public function add_details()
+    public function add_details($request)
     {
-        return 'add_details';
+        $username = $request->username;
+        $track_code = $request->track_code;
+        $date = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $request->date);
+        $location = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $request->track_code);
+        $status = $request->status;
+        $receiver = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $request->receiver);
+        $user =DB::select("SELECT ID FROM wdp_users WHERE user_login = '$username' LIMIT 1");
+        $user_id = $user[0]->ID;
+
+        if (!isset($user_id))
+            $this->responseBre(400, "Username doesn't exists", NULL);
+        $term =DB::select("SELECT term_id FROM wdp_terms WHERE name = '$status' LIMIT 1;");
+        $status_id = $term[0]->term_id;
+        if (!isset($status_id))
+            $this->responseBre(400, "Status id doesn't exists", NULL);
+
+
+        $post = DB::select("SELECT post_id FROM wdp_postmeta WHERE meta_key = 'wpt_tracking_code' AND meta_value = '$track_code' AND post_id !=0 LIMIT 1;");
+
+        $post_id = $post[0]->post_id;
+        $postTest = $post_id;
+
+        $newdate = explode(' ', $date);
+
+        $tarikh = explode('/', $newdate[0]);
+        $zaman = explode(':', $newdate[1]);
+        unset($zaman[2]);
+
+        $tarikh[1] = (strlen($tarikh[1]) < 2) ? '0' . $tarikh[1] : $tarikh[1];
+        $tarikh[2] = (strlen($tarikh[2]) < 2) ? '0' . $tarikh[2] : $tarikh[2];
+
+        $zaman[0] = (strlen($zaman[0]) < 2) ? '0' . $zaman[0] : $zaman[0];
+        $zaman[1] = (strlen($zaman[1]) < 2) ? '0' . $zaman[1] : $zaman[1];
+
+        $date = implode('-', $tarikh) . ' ' . implode(':', $zaman);
+        $date = str_replace('-0-0 ', ' ', $date);
+
+
+        if (isset($post_id) && $post_id != 0 && $post_id != '') {
+            //update wpt_location
+            $post = DB::select("SELECT meta_value FROM wdp_postmeta WHERE post_id = '$post_id' AND meta_key = 'wpt_location' LIMIT 1;");
+
+            $meta_value_cache = unserialize(unserialize($post[0]->meta_value));
+            $NewValues = array();
+            if (is_array($meta_value_cache)) {
+                $wpt_location = $meta_value_cache;
+            } else {
+                $wpt_location = array();
+            }
+            $NewValues = array('time' => $date, 'location' => $location, 'status' => $status_id, 'count' => '', 'receiver' => $receiver);
+            array_push($wpt_location, $NewValues);
+            $wpt_location = serialize(serialize($wpt_location));
+            $post = DB::update("UPDATE wdp_postmeta SET meta_value = '$wpt_location' WHERE post_id = '$post_id' AND meta_key = 'wpt_location';");
+            dd($post);
+            if (COUNT($post) > 0) {
+                $this->responseBre(200, "Successful", ['track_code' => $track_code]);
+            }
+        } else {
+            //insert new post
+            $date_Now = date("Y-m-d H:i:s");
+            $post = DB::statement("INSERT INTO wdp_posts (post_date,post_date_gmt,post_modified,post_modified_gmt,post_excerpt,to_ping,pinged,post_content_filtered,post_title, post_content, post_author, post_status, post_type) VALUES ( '$date_Now' , '$date_Now' , '$date_Now' , '$date_Now' ,'','','','','','', '$user_id' ,'publish','transport')");
+            $post_id = $post->id;
+            $wpt_location = array('3' => array('time' => $date, 'location' => $location, 'status' => $status_id, 'count' => '', 'receiver' => $receiver));
+            $wpt_location = serialize(serialize($wpt_location));
+            $post = DB::statement("INSERT INTO wdp_postmeta (post_id, meta_key, meta_value) VALUES ($post_id, 'wpt_tracking_code', '$track_code'), ($post_id, 'wpt_location', '$wpt_location')");
+            if (COUNT($post) > 0) {
+                $this->responseBre(200, "Successful", ['track_code2' => $track_code]);
+            }
+        }
     }
 
     public function Duplicate_Clean()

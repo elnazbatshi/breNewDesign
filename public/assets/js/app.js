@@ -1,3 +1,18 @@
+const toastBgError = "#f44336";
+const toastBgSuccess = "#28a745";
+const toast = swal.mixin({
+    toast: true,
+    position: "top-end",
+    showConfirmButton: false,
+    background: "#28a745",
+    timer: 3000,
+    timerProgressBar: true,
+    onOpen: (toast) => {
+        toast.addEventListener("mouseenter", Swal.stopTimer);
+        toast.addEventListener("mouseleave", Swal.resumeTimer);
+    },
+});
+
 var App = function() {
     var MediaSize = {
         xl: 1200,

@@ -26,7 +26,7 @@
                 </a>
                 <ul class="collapse submenu recent-submenu mini-recent-submenu list-unstyled show" id="dashboard" data-parent="#accordionExample">
                     <li class="active">
-                        <a href="index-2.html"> Analytics </a>
+                        <a href="{{route('terms')}}"> terms </a>
                     </li>
                     <li>
                         <a href="index2.html"> Sales </a>

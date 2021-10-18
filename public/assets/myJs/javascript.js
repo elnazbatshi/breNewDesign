@@ -5,21 +5,19 @@ $(document).ready(function () {
     load(function () {
     });
 });
-$(".addCustomerCategory").click(function (event) {
+$(".addTerm").click(function (event) {
     $.ajax({
         type: "post",
-        url: "/customer/set_category",
+        url: "/setTerm",
         data: {
             '_token': $('meta[name="csrf-token"]').attr('content'),
-            'customerCategory': {
-                'name': $('#name').val(),
-            }
+            'name': $('#name').val(),
         },
         success: function (data) {
             load(function () {
                 toast.fire({
                     icon: "success",
-                    title: "عملیات با موفقیت انجام شد.",
+                    title: "add term successfully",
                     background: toastBgSuccess,
                 });
             })
@@ -68,7 +66,7 @@ function load(callback) {
                              <td>${index++}</td>
                              <td>${term.term_id}</td>
                              <td>${term.name}</td>
-                              <td class="text-center"><button class="btn text-primary mx-1" onclick="editeTerm(${term.term_id})"  ><i class="fa fa-edit"></i></button><button class="btn text-danger" onclick="deleteTerm(${term.term_id})"  ><i class="fa fa-trash"></i></button>
+                              <td class="text-center"><button data-toggle="modal" data-target="#editTerm" class="btn text-primary mx-1" data-id="${term.term_id}" data-name="${term.name}" onclick="editTerm(this)"  ><i class="fa fa-edit"></i></button><button class="btn text-danger" onclick="deleteTerm(${term.term_id})"  ><i class="fa fa-trash"></i></button>
                           </tr>
 					  `;
                 $('#term_data').append(html);
@@ -85,14 +83,14 @@ function load(callback) {
 
 function deleteTerm(id) {
     Swal.fire({
-        title: 'آیا از حذف این دسته بندی اطمینان دارید؟',
+        title: 'are you sure delete item?',
         html: '<small>این عمل غیرقابل بازگشت است!</small>',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
         cancelButtonColor: '#3085d6',
-        cancelButtonText: 'انصراف',
-        confirmButtonText: 'حذف!'
+        cancelButtonText: 'cancel',
+        confirmButtonText: 'delete!'
     }).then((result) => {
         if (result.value) {
             $.ajax({
@@ -105,7 +103,7 @@ function deleteTerm(id) {
                         load(function () {
                             toast.fire({
                                 icon: "success",
-                                title: "عملیات با موفقیت انجام شد",
+                                title: "deleted successfully",
                                 background: toastBgSuccess,
 
                             });
@@ -117,7 +115,7 @@ function deleteTerm(id) {
                         load(function () {
                             toast.fire({
                                 icon: "error",
-                                title: "عملیات با موفقیت انجام نشد",
+                                title: "error delete item",
                                 background: toastBgSuccess,
 
                             });
@@ -132,4 +130,35 @@ function deleteTerm(id) {
         }
     });
 }
+
+function editTerm(sender){
+   var name= $(sender).attr("data-name")
+   var id= $(sender).attr("data-id")
+    $('#editName').val(name)
+
+    $('#updateTerm').attr('data-id' , id);
+}
+$("#updateTerm").click(function (event) {
+    var id= $(this).attr("data-id");
+    $.ajax({
+        type: "post",
+        url: "/updateTerm/" + id,
+        data: {
+            '_token': $('meta[name="csrf-token"]').attr('content'),
+            'name': $('#editName').val(),
+        },
+        success: function (data) {
+            load(function () {
+                toast.fire({
+                    icon: "success",
+                    title: "عملیات با موفقیت انجام شد.",
+                    background: toastBgSuccess,
+                });
+            })
+        },
+        error: function (data) {
+            alert("Error" + data)
+        }
+    });
+});
 

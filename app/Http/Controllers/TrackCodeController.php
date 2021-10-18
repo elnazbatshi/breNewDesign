@@ -17,6 +17,15 @@ class TrackCodeController extends Controller
         return view('terms');
     }
 
+    public function setTerm(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|max:255',
+        ]);
+        $name = $request->input('name');
+        Term::create(['name' => $name]);
+        return response(['response' => true]);
+    }
 
     public function getTerms(Request $request)
     {
@@ -31,7 +40,21 @@ class TrackCodeController extends Controller
 
     public function deleteTerm($id)
     {
-        $term = Term::where('term_id',$id)->delete();
+        $term = Term::where('term_id', $id)->delete();
         return response(['response' => true, 'terms' => $term]);
+    }
+
+    public function updateTerm(Request $request, $id)
+    {
+
+        $request->validate([
+            'name' => 'required|max:255',
+        ]);
+        $term = Term::where('term_id', $id);
+        $term->update([
+            'name' => $request->name,
+
+        ]);
+        return response(["status" => true]);
     }
 }
