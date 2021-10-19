@@ -180,11 +180,10 @@ class CoreController extends Controller
             $track_code = [$track_code];
         }
         $track_codes = implode(',', $track_code);
-        $postsWithTerm =DB::select("SELECT DISTINCT p1.meta_value as track_code, p2.meta_value as details FROM wdp_postmeta p1 JOIN wdp_postmeta p2 ON p2.post_id=p1.post_id WHERE p2.meta_key = 'wpt_location' AND p1.meta_key = 'wpt_tracking_code' AND p1.post_id != '0' AND p1.meta_value IN ($track_codes);");
-        $posts =DB::select("SELECT DISTINCT p1.meta_value as track_code, p2.meta_value as details FROM wdp_postmeta p1 JOIN wdp_postmeta p2 ON p2.post_id=p1.post_id WHERE p2.meta_key = 'wpt_location' AND p1.meta_key = 'wpt_tracking_code' AND p1.post_id != '0' AND p1.meta_value IN ($track_codes);");
+        $postsWithTerm =DB::select("SELECT DISTINCT p1.meta_value as track_code,p1.post_id as post_id, p2.meta_value as details FROM wdp_postmeta p1 JOIN wdp_postmeta p2 ON p2.post_id=p1.post_id WHERE p2.meta_key = 'wpt_location' AND p1.meta_key = 'wpt_tracking_code' AND p1.post_id != '0' AND p1.meta_value IN ($track_codes);");
+        $posts =DB::select("SELECT DISTINCT p1.meta_value as track_code,p1.post_id as post_id, p2.meta_value as details FROM wdp_postmeta p1 JOIN wdp_postmeta p2 ON p2.post_id=p1.post_id WHERE p2.meta_key = 'wpt_location' AND p1.meta_key = 'wpt_tracking_code' AND p1.post_id != '0' AND p1.meta_value IN ($track_codes);");
         $terms = DB::select("SELECT term_id, name FROM wdp_terms;");
-
-
+        $post_id = $posts[0]->post_id;
         $posts = array_values(array_map(function ($post) use ($terms) {
             $details = unserialize(unserialize($post->details));
             $details = array_values(array_map(function ($detail) use ($terms) {
@@ -196,14 +195,15 @@ class CoreController extends Controller
                 if(isset($term[0]->name) && $term[0]->name != ''){
                     $detail['status'] = $term[0]->name;
                 }
-                return $detail;
+                if($detail != null){
+                    return $detail;
+                }
             }, $details));
             $details = array_values($this->array_sort($details, 'time', SORT_ASC));
             $post->details = $details;
             return $post;
         }, $posts));
-        $this->responseBre(200, "Successful", $posts[0]->post_id);
-        $post_id = $posts[0]->post_id;
+
         $postsWithTerm = array_values(array_map(function ($postwt) use ($terms) {
 
             $details = unserialize(unserialize($postwt->details));
@@ -303,14 +303,34 @@ class CoreController extends Controller
         } else {
             //insert new post
             $date_Now = date("Y-m-d H:i:s");
-            $post = DB::statement("INSERT INTO wdp_posts (post_date,post_date_gmt,post_modified,post_modified_gmt,post_excerpt,to_ping,pinged,post_content_filtered,post_title, post_content, post_author, post_status, post_type) VALUES ( '$date_Now' , '$date_Now' , '$date_Now' , '$date_Now' ,'','','','','','', '$user_id' ,'publish','transport')");
-            $post_id = $post->id;
+            $post_id = DB::table('wdp_posts')->insertGetId([
+                ['post_date' => $date_Now],
+                ['post_date_gmt' => $date_Now],
+                ['post_modified' => $date_Now],
+                ['post_modified_gmt' => $date_Now],
+                ['post_excerpt' => ''],
+                ['to_ping' => ''],
+                ['pinged' => ''],
+                ['post_content_filtered' => ''],
+                ['post_title' => ''],
+                ['post_content' => ''],
+                ['post_author' => $user_id],
+                ['post_status' =>'publish'],
+                ['post_type' => 'transport'],
+            ]);
             $wpt_location = array('3' => array('time' => $date, 'location' => $location, 'status' => $status_id, 'count' => '', 'receiver' => $receiver));
             $wpt_location = serialize(serialize($wpt_location));
-            $post = DB::statement("INSERT INTO wdp_postmeta (post_id, meta_key, meta_value) VALUES ($post_id, 'wpt_tracking_code', '$track_code'), ($post_id, 'wpt_location', '$wpt_location')");
-            if (COUNT($post) > 0) {
-                $this->responseBre(200, "Successful", ['track_code2' => $track_code]);
-            }
+            $post_id = DB::table('wdp_postmeta')->insertGetId([
+                ['post_id' => $post_id],
+                ['meta_key' => 'wpt_tracking_code'],
+                ['meta_value' => $track_code],
+            ]);
+            $post_id = DB::table('wdp_postmeta')->insertGetId([
+                ['post_id' => $post_id],
+                ['meta_key' => 'wpt_location'],
+                ['meta_value' => $wpt_location],
+            ]);
+            $this->responseBre(200, "Successful", ['track_code2' => $track_code]);
         }
     }
 
