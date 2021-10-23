@@ -389,16 +389,16 @@ class CoreController extends Controller
             $status = $dt['status'];
             $receiver = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $dt['receiver']);
 
-            $term = DB::select("SELECT term_id FROM " . prefix . "terms WHERE name = \"$status\" LIMIT 1");
+            $term = DB::select("SELECT term_id FROM wdp_terms WHERE name = \"$status\" LIMIT 1");
 
-            $status_id = $term['term_id'];
+            $status_id = $term[0]['term_id'];
 
             if (!isset($status_id)) {
                 $failure[] = $track_code;
                 continue;
             }
 
-            $post = DB::select("SELECT post_id FROM " . prefix . "postmeta WHERE meta_key = 'wpt_tracking_code' AND meta_value = '$track_code' AND LIMIT 1");
+            $post = DB::select("SELECT post_id FROM wdp_postmeta WHERE meta_key = 'wpt_tracking_code' AND meta_value = '$track_code' AND LIMIT 1");
             $post_id = $post['post_id'];
 
             $newdate = explode(' ', $date);
@@ -488,10 +488,10 @@ class CoreController extends Controller
         $wpt_location = [];
 
         foreach ($data as $dt) {
-            $date = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $dt[0]['date']);
-            $location = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $dt[0]['location']);
-            $status = $dt[0]['status'];
-            $receiver = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $dt[0]['receiver']);
+            $date = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $dt['date']);
+            $location = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $dt['location']);
+            $status = $dt['status'];
+            $receiver = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $dt['receiver']);
 
             $term = DB::select("SELECT term_id FROM wdp_terms WHERE name = \"$status\" LIMIT 1");
             $status_id = $term[0]->term_id;
