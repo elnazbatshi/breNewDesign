@@ -419,8 +419,6 @@ class CoreController extends Controller
                 //update wpt_location
 
                 $post = DB::select("SELECT meta_value FROM wdp_postmeta WHERE post_id = '$post_id' AND meta_key = 'wpt_location' LIMIT 1");
-                $post = mysqli_fetch_array(mysqli_query($connect, $sql));
-
                 $wpt_location = unserialize(unserialize($post['meta_value']));
 
                 array_push($wpt_location, array('time' => $date, 'location' => $location, 'status' => $status_id, 'count' => '', 'receiver' => $receiver));
@@ -433,21 +431,34 @@ class CoreController extends Controller
             } else {
                 //insert new post
                 $date_Now = date("Y-m-d H:i:s");
-                $sql = "INSERT INTO wdp_posts (post_date,post_date_gmt,post_modified,post_modified_gmt,post_excerpt,to_ping,pinged,post_content_filtered,post_title, post_content, post_author, post_status, post_type) VALUES ( '$date_Now' , '$date_Now' , '$date_Now' , '$date_Now' ,'','','','','','', $user_id ,'publish','transport')";
-
-                $post = mysqli_query($connect, $sql);
-
-                $post_id = mysqli_insert_id($connect);
-
+                $post_id = DB::table('wdp_posts')->insertGetId(
+                    ['post_date' => $date_Now,
+                        'post_date_gmt' => $date_Now,
+                        'post_modified' => $date_Now,
+                        'post_modified_gmt' => $date_Now,
+                        'post_excerpt' => '',
+                        'to_ping' => '',
+                        'pinged' => '',
+                        'post_content_filtered' => '',
+                        'post_title' => '',
+                        'post_content' => '',
+                        'post_author' => $user_id,
+                        'post_status' =>'publish',
+                        'post_type' => 'transport']
+                );
                 $wpt_location = array('3' => array('time' => $date, 'location' => $location, 'status' => $status_id, 'count' => '', 'receiver' => $receiver));
-
                 $wpt_location = serialize(serialize($wpt_location));
-
-                $sql = "INSERT INTO wdp_postmeta (post_id, meta_key, meta_value) VALUES ($post_id, 'wpt_tracking_code', '$track_code'), ($post_id, 'wpt_location', '$wpt_location')";
-                $post = mysqli_query($connect, $sql);
-
-                if (mysqli_affected_rows($connect) > 0)
-                    $success[] = $track_code;
+                $post = DB::table('wdp_postmeta')->insertGetId(
+                    ['post_id' => $post_id,
+                        'meta_key' => 'wpt_tracking_code',
+                        'meta_value' => $track_code],
+                );
+                $post = DB::table('wdp_postmeta')->insertGetId(
+                    ['post_id' => $post_id,
+                        'meta_key' => 'wpt_location',
+                        'meta_value' => $wpt_location],
+                );
+                $success[] = $track_code;
             }
         }
 
@@ -460,7 +471,7 @@ class CoreController extends Controller
         $track_code = $request->track_code;
         $data = $request->data;
         $user = DB::select("SELECT ID FROM wdp_users WHERE user_login = '$username' LIMIT 1");
-        $user_id = $user['ID'];
+        $user_id = $user[0]->ID;
         if (!isset($user_id))
             $this->responseBre(400, "Username doesn't exists", NULL);
 
@@ -468,7 +479,7 @@ class CoreController extends Controller
             $this->responseBre(400, "Data must be an array of objects", NULL);
 
         $post = DB::select("SELECT post_id FROM wdp_postmeta WHERE meta_key = 'wpt_tracking_code' AND meta_value = '$track_code' LIMIT 1");
-        $post_id = $post['post_id'];
+        $post_id = $post[0]->post_id;
 
         if (!isset($post_id)) {
             $this->responseBre(400, "There is no post with track number: {$track_code}", NULL);
@@ -477,16 +488,16 @@ class CoreController extends Controller
         $wpt_location = [];
 
         foreach ($data as $dt) {
-            $date = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $dt['date']);
-            $location = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $dt['location']);
-            $status = $dt['status'];
-            $receiver = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $dt['receiver']);
+            $date = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $dt[0]['date']);
+            $location = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $dt[0]['location']);
+            $status = $dt[0]['status'];
+            $receiver = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $dt[0]['receiver']);
 
             $term = DB::select("SELECT term_id FROM wdp_terms WHERE name = \"$status\" LIMIT 1");
-            $status_id = $term['term_id'];
+            $status_id = $term[0]->term_id;
 
             if (!isset($status_id) || $status == '')
-                response(400, "The status '{$status}' is not exists Status Id :" . $status_id, NULL);
+                $this->responseBre(400, "The status '{$status}' is not exists Status Id :" . $status_id, NULL);
 
 
             $newdate = explode(' ', $date);
