@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -58,7 +59,7 @@ class CoreController extends Controller
     {
         $token = 'sVR7nTA3O8S01XciOrjB5Y3vplzxLtBok';
         $action = $request->input('action');
-        if ($request->input('token') != $token){
+        if ($request->input('token') != $token) {
             $this->response(400, "Invalid Token", NULL);
             return;
         }
@@ -87,6 +88,9 @@ class CoreController extends Controller
             case 'LostTrackNumbers':
                 $this->LostTrackNumbers($request);
                 break;
+            case 'LoadTrackNumbers':
+                $this->LoadTrackNumbers($request);
+                break;
             case 'DuplicateCleanBatch':
                 $this->DuplicateCleanBatch($request);
                 break;
@@ -102,7 +106,7 @@ class CoreController extends Controller
     public function get_details($track_code)
     {
         if (empty($track_code)) $this->responseBre(400, "Tracking code should not be empty", NULL);
-        if (!is_array($track_code)){
+        if (!is_array($track_code)) {
             $track_code = [$track_code];
         }
         $track_codes = implode(',', $track_code);
@@ -114,7 +118,7 @@ class CoreController extends Controller
                 $term = array_values(array_filter($terms, function ($term) use ($detail) {
                     return ($term->term_id == $detail['status']);
                 }));
-                if(isset($term[0]->name) && $term[0]->name != ''){
+                if (isset($term[0]->name) && $term[0]->name != '') {
                     $detail['status'] = $term[0]->name;
                 }
 
@@ -135,7 +139,7 @@ class CoreController extends Controller
     public function get_details_min($track_code)
     {
         if (empty($track_code)) $this->responseBre(400, "Tracking code should not be empty", NULL);
-        if (!is_array($track_code)){
+        if (!is_array($track_code)) {
             $track_code = [$track_code];
         }
         $track_codes = implode(',', $track_code);
@@ -145,11 +149,11 @@ class CoreController extends Controller
             $details = unserialize(unserialize($post->details));
             $details = array_values(array_map(function ($detail) use ($terms) {
                 $term = array_values(array_filter($terms, function ($term) use ($detail) {
-                    if(isset($term->term_id) && $term->term_id != '' && isset($detail['status']) && $detail['status'] != ''){
+                    if (isset($term->term_id) && $term->term_id != '' && isset($detail['status']) && $detail['status'] != '') {
                         return ($term->term_id == $detail['status']);
                     }
                 }));
-                if(isset($term[0]->name) && $term[0]->name != ''){
+                if (isset($term[0]->name) && $term[0]->name != '') {
                     $detail['status'] = $term[0]->name;
                 }
                 return $detail;
@@ -163,7 +167,7 @@ class CoreController extends Controller
         for ($i = 0; $i <= COUNT($posts[0]->details); $i++) {
             if (isset($posts[0]->details[$i]['status']) && $posts[0]->details[$i]['status'] != '' && !in_array($posts[0]->details[$i]['status'] . '*' . $posts[0]->details[$i]['time'], $FilterStatus)) {
                 array_push($FilterStatus, $posts[0]->details[$i]['status'] . '*' . $posts[0]->details[$i]['time']);
-                if($posts[0]->details[$i] != null){
+                if ($posts[0]->details[$i] != null) {
                     array_push($Filtered, $posts[0]->details[$i]);
                 }
             }
@@ -176,26 +180,26 @@ class CoreController extends Controller
     public function get_details_min_auto_clean($track_code)
     {
         if (empty($track_code)) $this->responseBre(400, "Tracking code should not be empty", NULL);
-        if (!is_array($track_code)){
+        if (!is_array($track_code)) {
             $track_code = [$track_code];
         }
         $track_codes = implode(',', $track_code);
-        $postsWithTerm =DB::select("SELECT DISTINCT p1.meta_value as track_code,p1.post_id as post_id, p2.meta_value as details FROM wdp_postmeta p1 JOIN wdp_postmeta p2 ON p2.post_id=p1.post_id WHERE p2.meta_key = 'wpt_location' AND p1.meta_key = 'wpt_tracking_code' AND p1.post_id != '0' AND p1.meta_value IN ($track_codes);");
-        $posts =DB::select("SELECT DISTINCT p1.meta_value as track_code,p1.post_id as post_id, p2.meta_value as details FROM wdp_postmeta p1 JOIN wdp_postmeta p2 ON p2.post_id=p1.post_id WHERE p2.meta_key = 'wpt_location' AND p1.meta_key = 'wpt_tracking_code' AND p1.post_id != '0' AND p1.meta_value IN ($track_codes);");
+        $postsWithTerm = DB::select("SELECT DISTINCT p1.meta_value as track_code,p1.post_id as post_id, p2.meta_value as details FROM wdp_postmeta p1 JOIN wdp_postmeta p2 ON p2.post_id=p1.post_id WHERE p2.meta_key = 'wpt_location' AND p1.meta_key = 'wpt_tracking_code' AND p1.post_id != '0' AND p1.meta_value IN ($track_codes);");
+        $posts = DB::select("SELECT DISTINCT p1.meta_value as track_code,p1.post_id as post_id, p2.meta_value as details FROM wdp_postmeta p1 JOIN wdp_postmeta p2 ON p2.post_id=p1.post_id WHERE p2.meta_key = 'wpt_location' AND p1.meta_key = 'wpt_tracking_code' AND p1.post_id != '0' AND p1.meta_value IN ($track_codes);");
         $terms = DB::select("SELECT term_id, name FROM wdp_terms;");
         $post_id = $posts[0]->post_id;
         $posts = array_values(array_map(function ($post) use ($terms) {
             $details = unserialize(unserialize($post->details));
             $details = array_values(array_map(function ($detail) use ($terms) {
                 $term = array_values(array_filter($terms, function ($term) use ($detail) {
-                    if(isset($term->term_id) && $term->term_id != '' && isset($detail['status']) && $detail['status'] != ''){
+                    if (isset($term->term_id) && $term->term_id != '' && isset($detail['status']) && $detail['status'] != '') {
                         return ($term->term_id == $detail['status']);
                     }
                 }));
-                if(isset($term[0]->name) && $term[0]->name != ''){
+                if (isset($term[0]->name) && $term[0]->name != '') {
                     $detail['status'] = $term[0]->name;
                 }
-                if($detail != null){
+                if ($detail != null) {
                     return $detail;
                 }
             }, $details));
@@ -209,11 +213,11 @@ class CoreController extends Controller
             $details = unserialize(unserialize($postwt->details));
             $details = array_values(array_map(function ($detail) use ($terms) {
                 $term = array_values(array_filter($terms, function ($term) use ($detail) {
-                    if(isset($term->term_id) && $term->term_id != '' && isset($detail['status']) && $detail['status'] != ''){
+                    if (isset($term->term_id) && $term->term_id != '' && isset($detail['status']) && $detail['status'] != '') {
                         return ($term->term_id == $detail['status']);
                     }
                 }));
-                if(isset($term[0]->name) && $term[0]->name != ''){
+                if (isset($term[0]->name) && $term[0]->name != '') {
                     $detail['status'] = $term[0]->name;
                 }
                 return $detail;
@@ -249,18 +253,18 @@ class CoreController extends Controller
         $location = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $request->track_code);
         $status = $request->status;
         $receiver = preg_replace('/[^a-z0-9_\-\/\'\": ]/i', '', $request->receiver);
-        $user =DB::select("SELECT ID FROM wdp_users WHERE user_login = '$username' LIMIT 1");
+        $user = DB::select("SELECT ID FROM wdp_users WHERE user_login = '$username' LIMIT 1");
         $user_id = $user[0]->ID;
         if (!isset($user_id))
             $this->responseBre(400, "Username doesn't exists", NULL);
 
-        $term =DB::select("SELECT term_id FROM wdp_terms WHERE name = \"$status\" LIMIT 1");
+        $term = DB::select("SELECT term_id FROM wdp_terms WHERE name = \"$status\" LIMIT 1");
         $status_id = $term[0]->term_id;
         if (!isset($status_id))
             $this->responseBre(400, "Status id doesn't exists", NULL);
 
         $post = DB::select("SELECT post_id FROM wdp_postmeta WHERE meta_key = 'wpt_tracking_code' AND meta_value = \"$track_code\" AND post_id !=0 LIMIT 1;");
-        if (isset( $post[0]->post_id) &&  $post[0]->post_id != 0 &&  $post[0]->post_id != '') {
+        if (isset($post[0]->post_id) && $post[0]->post_id != 0 && $post[0]->post_id != '') {
             $post_id = $post[0]->post_id;
             $postTest = $post_id;
         }
@@ -297,30 +301,30 @@ class CoreController extends Controller
             $date_Now = date("Y-m-d H:i:s");
             $post_id = DB::table('wdp_posts')->insertGetId(
                 ['post_date' => $date_Now,
-                'post_date_gmt' => $date_Now,
-                'post_modified' => $date_Now,
-                'post_modified_gmt' => $date_Now,
-                'post_excerpt' => '',
-                'to_ping' => '',
-                'pinged' => '',
-                'post_content_filtered' => '',
-                'post_title' => '',
-                'post_content' => '',
-                'post_author' => $user_id,
-                'post_status' =>'publish',
-                'post_type' => 'transport']
+                    'post_date_gmt' => $date_Now,
+                    'post_modified' => $date_Now,
+                    'post_modified_gmt' => $date_Now,
+                    'post_excerpt' => '',
+                    'to_ping' => '',
+                    'pinged' => '',
+                    'post_content_filtered' => '',
+                    'post_title' => '',
+                    'post_content' => '',
+                    'post_author' => $user_id,
+                    'post_status' => 'publish',
+                    'post_type' => 'transport']
             );
             $wpt_location = array('3' => array('time' => $date, 'location' => $location, 'status' => $status_id, 'count' => '', 'receiver' => $receiver));
             $wpt_location = serialize(serialize($wpt_location));
             $post_id = DB::table('wdp_postmeta')->insertGetId(
                 ['post_id' => $post_id,
-                'meta_key' => 'wpt_tracking_code',
-                'meta_value' => $track_code],
+                    'meta_key' => 'wpt_tracking_code',
+                    'meta_value' => $track_code],
             );
             $post_id = DB::table('wdp_postmeta')->insertGetId(
                 ['post_id' => $post_id,
-                'meta_key' => 'wpt_location',
-                'meta_value' => $wpt_location],
+                    'meta_key' => 'wpt_location',
+                    'meta_value' => $wpt_location],
             );
             $this->responseBre(200, "Successful", ['track_code2' => $track_code]);
         }
@@ -328,19 +332,19 @@ class CoreController extends Controller
 
     public function Duplicate_Clean($request)
     {
-        $track_code=$request->track_code;
+        $track_code = $request->track_code;
         if (!is_array($track_code))
             $track_code = [$track_code];
 
         $track_codes = implode(',', $track_code);
-        $posts=DB::select("SELECT DISTINCT p1.meta_value as track_code,p1.post_id as post_id, p2.meta_value as details FROM wdp_postmeta p1 JOIN wdp_postmeta p2 ON p2.post_id=p1.post_id WHERE p2.meta_key = 'wpt_location' AND p1.meta_key = 'wpt_tracking_code' AND p1.post_id != '0' AND p1.meta_value IN ($track_codes);");
+        $posts = DB::select("SELECT DISTINCT p1.meta_value as track_code,p1.post_id as post_id, p2.meta_value as details FROM wdp_postmeta p1 JOIN wdp_postmeta p2 ON p2.post_id=p1.post_id WHERE p2.meta_key = 'wpt_location' AND p1.meta_key = 'wpt_tracking_code' AND p1.post_id != '0' AND p1.meta_value IN ($track_codes);");
         $post_id = $posts[0]->post_id;
         $terms = DB::select("SELECT term_id, name FROM wdp_terms;");
         $posts = array_values(array_map(function ($post) use ($terms) {
             $details = unserialize(unserialize($post->details));
             $details = array_values(array_map(function ($detail) use ($terms) {
                 $term = array_values(array_filter($terms, function ($term) use ($detail) {
-                    if(isset($term->term_id) && $term->term_id != '' && isset($detail['status']) && $detail['status'] != ''){
+                    if (isset($term->term_id) && $term->term_id != '' && isset($detail['status']) && $detail['status'] != '') {
                         return ($term->term_id == $detail['status']);
                     }
                 }));
@@ -443,7 +447,7 @@ class CoreController extends Controller
                         'post_title' => '',
                         'post_content' => '',
                         'post_author' => $user_id,
-                        'post_status' =>'publish',
+                        'post_status' => 'publish',
                         'post_type' => 'transport']
                 );
                 $wpt_location = array('3' => array('time' => $date, 'location' => $location, 'status' => $status_id, 'count' => '', 'receiver' => $receiver));
@@ -530,19 +534,66 @@ class CoreController extends Controller
         $this->responseBre(200, "Successful", $posts);
     }
 
+    public function LoadTrackNumbers($request)
+    {
+        $posts = DB::select("SELECT * FROM wdp_postmeta WHERE meta_key = 'wpt_tracking_code' ORDER BY meta_id DESC ");
+        $this->responseBre(200, "Successful", $posts);
+    }
+
     public function DuplicateCleanBatch($request)
     {
-        return 'DuplicateCleanBatch';
+        $track_code = $_REQUEST['track_code'][0];
+        //-------------------------------------------
+        if (!is_array($track_code))
+            $track_code = [$track_code];
+
+        $track_codes = implode(',', $track_code);
+        $sql = "SELECT DISTINCT p1.meta_value as track_code,p1.post_id as post_id, p2.meta_value as details FROM " . prefix . "postmeta p1 JOIN " . prefix . "postmeta p2 ON p2.post_id=p1.post_id WHERE p2.meta_key = 'wpt_location' AND p1.meta_key = 'wpt_tracking_code' AND p1.post_id != '0' AND p1.meta_value IN ($track_codes);";
+        $query = mysqli_query($connect, $sql);
+        $posts = mysqli_fetch_all($query, MYSQLI_ASSOC);
+        $post_id = $posts[0]['post_id'];
+        $sql = "SELECT term_id, name FROM " . prefix . "terms;";
+        $query = mysqli_query($connect, $sql);
+        $terms = mysqli_fetch_all($query, MYSQLI_ASSOC);
+        $posts = array_values(array_map(function ($post) use ($terms) {
+            $details = unserialize(unserialize($post['details']));
+            $details = array_values(array_map(function ($detail) use ($terms) {
+                $term = array_values(array_filter($terms, function ($term) use ($detail) {
+                    return ($term['term_id'] == $detail['status']);
+                }));
+                //$detail['status'] = $term[0]['name'];
+                return $detail;
+            }, $details));
+            $details = array_values(array_sort($details, 'time', SORT_ASC));
+            $post['details'] = $details;
+            return $post;
+        }, $posts));
+        $FilterStatus = array();
+        $Filtered = array();
+        for ($i = 0; $i <= COUNT($posts[0]['details']); $i++) {
+            if (!in_array($posts[0]['details'][$i]['status'] . '*' . $posts[0]['details'][$i]['time'], $FilterStatus)) {
+                array_push($FilterStatus, $posts[0]['details'][$i]['status'] . '*' . $posts[0]['details'][$i]['time']);
+                array_push($Filtered, $posts[0]['details'][$i]);
+            }
+        }
+        //-----------------------------------------
+        $wpt_location = serialize(serialize($Filtered));
+        $sql = "UPDATE " . prefix . "postmeta SET meta_value = '$wpt_location' WHERE post_id = '$post_id' AND meta_key = 'wpt_location'";
+        $post = $connect->query($sql);
+        if (mysqli_affected_rows($connect) > 0) {
+            response(200, "Successful", ['track_code' => 'Successfully']);
+        }
     }
 
     public function LimitedSelect($request)
     {
-        $range = explode('-',$request->range);
+        $range = explode('-', $request->range);
         $from = (int)$range[0];
         $to = (int)$range[1];
         $posts = DB::select("SELECT * FROM wdp_postmeta WHERE post_id != 0 AND meta_key = 'wpt_tracking_code' ORDER BY meta_id DESC  LIMIT $from,$to");
         $this->responseBre(200, "Successful", $posts);
     }
+
     public function delete_tracks($request)
     {
         if (empty($_REQUEST['track_code'])) $this->responseBre(400, "Tracking code should not be empty", NULL);
