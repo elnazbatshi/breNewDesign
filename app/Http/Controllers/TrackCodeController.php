@@ -30,7 +30,7 @@ class TrackCodeController extends Controller
     public function getTerms(Request $request)
     {
         $query = Term::query();
-        if ($request->filter != 'All') {
+        if ($request->filter != '') {
             $query->Where('name', 'like', '%' . $request->filter . '%')
                 ->orWhere('term_id', 'like', '%' . $request->filter . '%');
         }

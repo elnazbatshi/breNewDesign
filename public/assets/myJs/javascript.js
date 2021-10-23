@@ -27,24 +27,12 @@ $(".addTerm").click(function (event) {
         }
     });
 });
-$('#search').on('input', function () {
-    if ($(this).val().length > 1) {
-        insert_param_url('search', $(this).val(), function () {
-            load(function () {
-            });
-        });
-    } else if ($(this).val().length <= 0) {
-        insert_param_url('search', $(this).val(), function () {
-            load(function () {
-            });
-        });
-    }
-});
-
 function load(callback) {
-    var filter = 'All';
-    if (getUrlParameter('search') != '') {
-        filter = getUrlParameter('search');
+    var filter = '';
+    filter = getUrlParameter('filter');
+    if (filter != undefined && filter!= '') {
+
+        $('#removeFilter').removeClass('btn-light').addClass('btn-danger');
     }
     var index = 1;
     $.ajax({
@@ -159,6 +147,17 @@ $("#updateTerm").click(function (event) {
         error: function (data) {
             alert("Error" + data)
         }
+    });
+});
+$('#removeFilter').on('click', function () {
+    $('#filter-form').trigger('reset');
+    var queryString = location.href.split('?');
+    history.replaceState("", "", queryString[0]);
+    $('#filterPost').removeClass("btn-light").addClass("btn-success");
+    $('#removeFilter').removeClass("btn-danger").addClass("btn-light");
+    $('#search').val('');
+    load(function () {
+
     });
 });
 
