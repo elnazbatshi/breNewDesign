@@ -7,7 +7,7 @@
 }
 .flatpickr-calendar.open {
     display: inline-block;
-    z-index: 900;
+    z-index: 1062;
 }
 .flatpickr-calendar.arrowTop:before {
     border-bottom-color: #ebedf2;

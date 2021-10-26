@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PostMeta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -293,9 +294,8 @@ class CoreController extends Controller
             array_push($wpt_location, $NewValues);
             $wpt_location = serialize(serialize($wpt_location));
             $post = DB::update("UPDATE wdp_postmeta SET meta_value = '$wpt_location' WHERE post_id = '$post_id' AND meta_key = 'wpt_location';");
-            if (COUNT($post) > 0) {
-                $this->responseBre(200, "Successful", ['track_code' => $track_code]);
-            }
+            $this->responseBre(200, "Successful", ['track_code' => $track_code]);
+
         } else {
             //insert new post
             $date_Now = date("Y-m-d H:i:s");
@@ -530,15 +530,26 @@ class CoreController extends Controller
 
     public function LostTrackNumbers($request)
     {
+
         $posts = DB::select("SELECT * FROM wdp_postmeta WHERE post_id = 0 AND meta_key = 'wpt_tracking_code' ORDER BY meta_id DESC ");
         $this->responseBre(200, "Successful", $posts);
+
     }
 
     public function LoadTrackNumbers($request)
     {
-        $posts = DB::select("SELECT * FROM wdp_postmeta WHERE meta_key = 'wpt_tracking_code' ORDER BY meta_id DESC ");
+        $query =PostMeta::query();
+        if($request->filter != ''){
+            $query->where('meta_value', 'like', '%' . $request->filter . '%');
+        }
+
+       $posts= $query->where('meta_key', 'wpt_tracking_code')->orderBy('meta_id', 'DESC')->paginate($request->PerPage);
+//        $posts = DB::select("SELECT * FROM wdp_postmeta WHERE meta_key = 'wpt_tracking_code' ORDER BY meta_id DESC ");
+
         $this->responseBre(200, "Successful", $posts);
     }
+
+
 
     public function DuplicateCleanBatch($request)
     {

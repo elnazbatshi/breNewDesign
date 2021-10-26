@@ -37,7 +37,6 @@ Route::group(['middleware' => 'auth'], function () {
 });
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/tracks', [PostMetaController::class, 'tracks'])->name('trackCode');
-    Route::get('/getTracks', [PostMetaController::class, 'getTracks'])->name('getTracks');
 });
 
 

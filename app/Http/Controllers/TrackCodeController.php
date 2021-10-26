@@ -38,6 +38,8 @@ class TrackCodeController extends Controller
         return response(['response' => true, 'terms' => $terms]);
     }
 
+
+
     public function deleteTerm($id)
     {
         $term = Term::where('term_id', $id)->delete();

@@ -20,9 +20,18 @@
     <!-- END GLOBAL MANDATORY STYLES -->
 
     <!-- BEGIN PAGE LEVEL PLUGINS/CUSTOM STYLES -->
-    <link href="{{asset('plugins/apex/apexcharts.css')}}" rel="stylesheet" type="text/css">
+{{--    <link href="{{asset('plugins/apex/apexcharts.css')}}" rel="stylesheet" type="text/css">--}}
     <link href="{{asset('assets/css/dashboard/dash_1.css')}}" rel="stylesheet" type="text/css" />
+    <link href="{{asset('assets/css/elements/custom-pagination.css')}}" rel="stylesheet" type="text/css" />
+    <link href="{{asset('plugins/select2/select2.min.css')}}" rel="stylesheet" type="text/css" />
     <!-- END PAGE LEVEL PLUGINS/CUSTOM STYLES -->
+
+    <!-- BEGIN THEME GLOBAL STYLES -->
+    <link href="{{asset('plugins/flatpickr/flatpickr.css')}}" rel="stylesheet" type="text/css">
+    <!-- END THEME GLOBAL STYLES -->
+    <!--  BEGIN CUSTOM STYLE FILE  -->
+    <link href="{{asset('plugins/flatpickr/custom-flatpickr.css')}}" rel="stylesheet" type="text/css">
+
 
 </head>
 <body class="alt-menu sidebar-noneoverflow">

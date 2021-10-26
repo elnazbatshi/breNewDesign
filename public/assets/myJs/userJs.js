@@ -91,7 +91,7 @@ function load(callback) {
                               <td class="text-center">
                                <button data-toggle="modal" data-target="#editUser" class="btn text-primary mx-1" data-id="${user.ID}"  data-dName="${user.display_name}" data-name="${user.user_login}" data-email="${user.user_email}" onclick="editUser(this)"  ><i class="fa fa-edit"></i></button>
                                <button class="btn text-danger" onclick="deleteUser(${user.ID})"  ><i class="fa fa-trash"></i></button>
-                               <buttonn data-toggle="modal" data-target="#changePass" class="btn text-warning" onclick="setIdPass(${user.ID})"  ><i class="fa fa-key"></i></buttonn>
+                               <button data-toggle="modal" data-target="#changePass" class="btn text-warning" onclick="setIdPass(${user.ID})"  ><i class="fa fa-key"></i></button>
                               </td>
                           </tr>
 					  `;
